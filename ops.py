@@ -38,6 +38,9 @@ class SeperableConvolution(Model):
         self.bn = BatchNormalization()
 
     def call(self, inputs, training=None, mask=None):
+        remain_shape = 4 - len(inputs.shape)
+        for i in range(remain_shape):
+            inputs = np.expand_dims(inputs, axis=-1)
         x = self.conv(inputs)
         x = self.bn(x, training=training)
         return tf.nn.relu(x)
@@ -56,8 +59,9 @@ class Convolution(Model):
         self.bn = BatchNormalization()
 
     def call(self, inputs, training=None, mask=None):
-        if len(inputs.shape) == 2:
-            inputs = np.reshape(inputs, newshape=[inputs.shape[0], inputs.shape[1], 1, 1])
+        remain_shape = 4 - len(inputs.shape)
+        for i in range(remain_shape):
+            inputs = np.expand_dims(inputs, axis=-1)
         x = self.conv(inputs)
         x = self.bn(x, training=training)
         return tf.nn.relu(x)
@@ -102,6 +106,7 @@ class Pooling(Model):
             self.pool = AveragePooling2D(size, strides, padding='same')
 
     def call(self, inputs, training=None, mask=None):
-        if len(inputs.shape) == 2:
-            inputs = np.reshape(inputs, newshape=[inputs.shape[0], inputs.shape[1], 1, 1])
+        remain_shape = 4 - len(inputs.shape)
+        for i in range(remain_shape):
+            inputs = np.expand_dims(inputs, axis=-1)
         return self.pool(inputs)
