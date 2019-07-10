@@ -244,7 +244,7 @@ class StateSpace:
         else:
             new_b_dash = new_b
 
-        new_ip_values = list(range(self.input_lookback_depth, new_b_dash))
+        new_ip_values = list(range(self.input_lookback_depth, new_b_dash)) # inputs = list(range(self.input_lookback_depth, 0))
         ops = list(range(len(self.operators)))
 
         # if input_lookback_depth == 0, then we need to adjust to have at least

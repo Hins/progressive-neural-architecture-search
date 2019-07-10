@@ -32,7 +32,7 @@ class ModelGenerator(Model):
         self.cell_2 = self.build_cell(self.B, self.action_list, filters=64, stride=(2, 2))
 
         self.gap = GlobalAveragePooling2D()
-        self.logits = Dense(10, activation='softmax') # only logits
+        self.logits = Dense(22, activation='softmax') # only logits
 
     def call(self, inputs, training=None, mask=None):
         x = inputs
@@ -58,11 +58,13 @@ class ModelGenerator(Model):
 
     def build_cell(self, B, action_list, filters, stride):
         # if cell size is 1 block only
+        '''
         if B == 1:
             left = self.parse_action(filters, action_list[0][1], strides=stride)
             right = self.parse_action(filters, action_list[1][1], strides=stride)
     
             return [left, right]
+        '''
 
         # else concatenate all the intermediate blocks
         actions = []

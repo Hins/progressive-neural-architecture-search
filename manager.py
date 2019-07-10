@@ -66,7 +66,8 @@ class NetworkManager:
             a reward for training a model with the given actions
         '''
         if tf.test.is_gpu_available():
-            device = '/gpu:0'
+            #device = '/gpu:0'
+            device = 'cpu:0' # since TensorSliceDataset operation can't be used in gpu
         else:
             device = '/cpu:0'
 
