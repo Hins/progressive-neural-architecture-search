@@ -32,7 +32,7 @@ class ModelGenerator(Model):
         self.cell_2 = self.build_cell(self.B, self.action_list, filters=64, stride=(2, 2))
 
         self.gap = GlobalAveragePooling2D()
-        self.logits = Dense(22, activation='softmax') # only logits
+        self.logits = Dense(40, activation='softmax') # only logits
 
     def call(self, inputs, training=None, mask=None):
         x = inputs

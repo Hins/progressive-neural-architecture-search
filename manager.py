@@ -35,6 +35,7 @@ class NetworkManager:
         self.epochs = epochs
         self.batchsize = batchsize
         self.lr = learning_rate
+        self.models = {}
 
     def get_rewards(self, model_fn, actions, display_model_summary=True):
         '''
@@ -73,9 +74,14 @@ class NetworkManager:
 
         tf.keras.backend.reset_uids()
 
+        actions_str = ','.join([str(item) for item in actions])
         # generate a submodel given predicted actions
         with tf.device(device):
-            model = model_fn(actions)  # type: Model
+            if actions_str in self.models:
+                model = self.models[actions_str]
+            else:
+                model = model_fn(actions)  # type: Model
+                self.models[actions_str] = model
 
             # build model shapes
             X_train, y_train, X_val, y_val = self.dataset

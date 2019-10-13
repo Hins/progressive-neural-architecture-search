@@ -17,7 +17,7 @@ B = 3  # number of blocks in each cell
 K = 8  # number of children networks to train
 
 MAX_EPOCHS = 2  # maximum number of epochs to train, adjust by xtpan from 5 to 2
-BATCHSIZE = 128  # batchsize
+BATCHSIZE = 512  # batchsize
 CHILD_MODEL_LR = 0.001  # learning rate for the child models.
 REGULARIZATION = 0  # regularization strength
 CONTROLLER_CELLS = 100  # number of cells in RNN controller
@@ -26,8 +26,9 @@ RESTORE_CONTROLLER = False  # restore controller to continue training
 
 operators = ['3x3 dconv', '5x5 dconv', '7x7 dconv',
              '1x7-7x1 conv', '3x3 maxpool', '3x3 avgpool']  # use the default set of operators, minus identity and conv 3x3
-
-# operators = ['3x3 maxpool', '1x7-7x1 conv',]  # mini search space
+'''
+operators = ['3x3 maxpool', '1x7-7x1 conv',]  # mini search space
+'''
 
 # construct a state space
 state_space = StateSpace(B, input_lookback_depth=0, input_lookforward_depth=0,
@@ -37,42 +38,38 @@ state_space = StateSpace(B, input_lookback_depth=0, input_lookforward_depth=0,
 state_space.print_state_space()
 NUM_TRAILS = state_space.print_total_models(K)
 
-'''
-# prepare the training data for the NetworkManager
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
-x_train = x_train.astype('float32') / 255.
-x_test = x_test.astype('float32') / 255.
-
-# create a validation set for evaluation of the child models
-x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=0)
-
-y_train = to_categorical(y_train, 10)
-y_test = to_categorical(y_test, 10)
-'''
-
 x_train = []
 y_train = []
 x_test = []
 y_test = []
-with open('nlp/feature.filter', 'r') as f:
+label_size = 0
+with open('nlp/train.dat', 'r') as f:
     for line in f:
         elements = line.strip('\r\n').split('\t')
-        if random.uniform(0, 1) < 0.8:
-            x_train.append(elements[0].split(','))
-            y_train.append(elements[1])
-        else:
-            x_test.append(elements[0].split(','))
-            y_test.append(elements[1])
+        x_train.append(elements[0].split(','))
+        y_train.append(elements[1])
+        if int(elements[1]) > label_size:
+            label_size = int(elements[1])
     f.close()
+with open('nlp/val.dat', 'r') as f:
+    for line in f:
+        elements = line.strip('\r\n').split('\t')
+        x_test.append(elements[0].split(','))
+        y_test.append(elements[1])
+        if int(elements[1]) > label_size:
+            label_size = int(elements[1])
+    f.close()
+label_size += 1
+print('label size is %d' % label_size)
 x_train = np.asarray(x_train, dtype=np.float32)
 y_train = np.asarray(y_train, dtype=np.int32)
 x_test = np.asarray(x_test, dtype=np.float32)
 y_test = np.asarray(y_test, dtype=np.int32)
 
 y_train = np.reshape(y_train, newshape=[y_train.shape[0], 1])
-y_train = to_categorical(y_train, num_classes=22)
+y_train = to_categorical(y_train, num_classes=label_size)
 y_test = np.reshape(y_test, newshape=[y_test.shape[0], 1])
-y_test = to_categorical(y_test, num_classes=22)
+y_test = to_categorical(y_test, num_classes=label_size)
 x_train = np.reshape(x_train, newshape=[x_train.shape[0], x_train.shape[1], 1, 1])
 
 dataset = [x_train, y_train, x_test, y_test]  # pack the dataset for the NetworkManager
@@ -88,6 +85,8 @@ controller = ControllerManager(state_space, B=B, K=K,
 manager = NetworkManager(dataset, epochs=MAX_EPOCHS, batchsize=BATCHSIZE)
 print()
 
+best_accu = 0.0
+best_action_list = []
 # train for number of trails
 for trial in range(B):
     if trial == 0:
@@ -107,6 +106,9 @@ for trial in range(B):
         # build a model, train and get reward and accuracy from the network manager
         reward = manager.get_rewards(ModelGenerator, state_space.parse_state_space_list(action))
         print("Final Accuracy : ", reward)
+        if reward > best_accu:
+            best_accu = reward
+            best_action_list = action
 
         rewards.append(reward)
         print("\nFinished %d out of %d models ! \n" % (t + 1, len(actions)))
@@ -125,3 +127,5 @@ for trial in range(B):
     print()
 
 print("Finished !")
+print("Best accuracy is %f" % best_accu)
+print("Best action list is ", state_space.parse_state_space_list(best_action_list))
