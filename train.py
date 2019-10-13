@@ -1,3 +1,4 @@
+import datetime
 import random
 import numpy as np
 import csv
@@ -60,7 +61,6 @@ with open('nlp/val.dat', 'r') as f:
             label_size = int(elements[1])
     f.close()
 label_size += 1
-print('label size is %d' % label_size)
 x_train = np.asarray(x_train, dtype=np.float32)
 y_train = np.asarray(y_train, dtype=np.int32)
 x_test = np.asarray(x_test, dtype=np.float32)
@@ -87,6 +87,8 @@ print()
 
 best_accu = 0.0
 best_action_list = []
+start_time = datetime.datetime.now()
+print(start_time.strftime('%H:%M:%S'))
 # train for number of trails
 for trial in range(B):
     if trial == 0:
@@ -126,6 +128,8 @@ for trial in range(B):
     controller.update_step()
     print()
 
+end_time = datetime.datetime.now()
+print(end_time.strftime('%H:%M:%S'))
 print("Finished !")
 print("Best accuracy is %f" % best_accu)
 print("Best action list is ", state_space.parse_state_space_list(best_action_list))

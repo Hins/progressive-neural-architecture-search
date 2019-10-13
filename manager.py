@@ -79,6 +79,7 @@ class NetworkManager:
         with tf.device(device):
             if actions_str in self.models:
                 model = self.models[actions_str]
+                print('re-train old model %s' % actions_str)
             else:
                 model = model_fn(actions)  # type: Model
                 self.models[actions_str] = model
@@ -138,7 +139,7 @@ class NetworkManager:
 
                 acc = acc.result().numpy()
 
-                print("Epoch %d: Val accuracy = %0.6f" % (epoch + 1, acc))
+                print("Epoch %d: Val accuracy = %0.6f, model structure=%s" % (epoch + 1, acc, actions_str))
 
                 # if acc improved, save the weights
                 if acc > best_val_acc:
@@ -150,6 +151,7 @@ class NetworkManager:
 
                 print()
 
+            '''
             # load best weights of the child model
             path = tf.train.latest_checkpoint('temp_weights/')
             saver.restore(path)
@@ -166,6 +168,7 @@ class NetworkManager:
                 acc(y, preds)
 
             acc = acc.result().numpy()
+            '''
 
         # compute the reward (validation accuracy)
         reward = acc
